@@ -1,6 +1,23 @@
 const con = require("../../config/db");
-module.exports.getProducts = (req, res) => {
-  return res.status(200).json({ message: "Get All customers" });
+module.exports.getProducts = async (req, res) => {
+  const Sqlquery = `SELECT * FROM products LEFT JOIN categories ON products.category_id = categories.category_id`;
+  await con.query(Sqlquery, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.status(200).json(result);
+    }
+  });
+};
+module.exports.getCategories = async (req, res) => {
+  const sqlquery = `SELECT * FROM categories `;
+  await con.query(sqlquery, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.status(200).json(result);
+    }
+  });
 };
 module.exports.createProduct = async (req, res) => {
   const {
@@ -9,22 +26,65 @@ module.exports.createProduct = async (req, res) => {
     product_stock,
     product_active,
     category,
-    created_at,
   } = req.body;
+  if (!product_name || !product_price || !product_active || !category) {
+    res.status(400).json({ message: "All Fields are required" });
+  } else {
+    await con.query(
+      `INSERT INTO products (product_name, product_price,product_stock,product_active,category_id)
+       VALUES ('${product_name}', '${product_price}','${product_stock}',
+       '${product_active}','${category}')`
+    );
+
+    return res.status(200).json({ message: "Proudct Created" });
+  }
+};
+
+module.exports.updateProduct = async (req, res) => {
+  const {
+    product_name,
+    product_price,
+    product_stock,
+    product_active,
+    category,
+    updated_at,
+  } = req.body;
+  const Sqlquery = `UPDATE products SET product_name = '${product_name}' ,product_price = '${product_price}',
+  product_stock = '${product_stock}',
+  product_active = '${product_active}',
+  category_id = '${category}' WHERE id = ${req.params.id}
+  `;
+  await con.query(Sqlquery, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(result);
+    }
+  });
   await con.query(
-    `INSERT INTO products (product_name, product_price,product_stock,product_active,category,created_at)
-     VALUES ('${product_name}', '${product_price}','${product_stock}',
-     '${product_active}','${category}', '${created_at}')`
+    `SELECT * FROM products LEFT JOIN categories ON products.category_id = categories.category_id WHERE id = ${req.params.id}`,
+    (err, result) => {
+      res.status(200).json(result);
+    }
   );
-
-  return res.status(200).json({ message: "Proudct Created" });
 };
-
-module.exports.updateProduct = (req, res) => {
-  return res.status(200).json({ message: "Proudct updated" });
-};
-module.exports.DeleteProduct = (req, res) => {
-  return res.status(204).json({ message: "Product has been deleted" });
+module.exports.DeleteProduct = async (req, res) => {
+  let re = await con.query(
+    `SELECT COUNT(id) as count FROM products WHERE id = ${req.params.id}`,
+    (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        if (result[0].count > 0) {
+          const sqlQuery = `DELETE FROM products WHERE id = ${req.params.id}`;
+          con.query(sqlQuery);
+          res.status(204).json({ message: "Product Deleted sucessfully" });
+        } else {
+          res.status(500).json({ Err: "Product Not Found" });
+        }
+      }
+    }
+  );
 };
 
 module.exports.mostPopularProducts = async (req, res) => {
@@ -40,7 +100,7 @@ module.exports.mostPopularProducts = async (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        res.status(200).json(result);
+        res.status(200).json(result[0]);
       }
     }
   );
@@ -58,7 +118,7 @@ module.exports.topSellingProducts = async (req, res) => {
       if (err) {
         console.log(err);
       } else {
-        res.status(200).json(result);
+        res.status(200).json(result[0]);
       }
     }
   );
