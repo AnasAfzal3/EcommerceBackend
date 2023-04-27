@@ -93,8 +93,8 @@ module.exports.mostPopularProducts = async (req, res) => {
     SELECT c.categoryName AS categoryName, (COUNT(o.id) / (SELECT COUNT(*) FROM orders) * 100) AS order_percentage
     FROM orders as o
     LEFT JOIN products p ON o.product_id = p.id
-    LEFT JOIN categories c ON p.category_id = c.id
-    GROUP BY c.id
+    LEFT JOIN categories c ON p.category_id = c.category_id
+    GROUP BY c.category_id
     `,
     (err, result) => {
       if (err) {
