@@ -13,14 +13,21 @@ module.exports.getCustomers = async (req, res) => {
 };
 module.exports.createCustomer = async (req, res) => {
   const { Name, Email, Cardnumber, PhoneNumber } = req.body;
-  const CardNumberEncrypt = bcrypt.hashSync(Cardnumber, 10);
-  await con.query(
-    `INSERT INTO customers (Name,Email,Card,Phonenumber)
-     VALUES ('${Name}', '${Email}','${CardNumberEncrypt}','${PhoneNumber}')`
-  );
+  let visacardValidation = /^(?:4[0-9]{12}(?:[0-9]{3})?)$/
+  let emailvalidation = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/
+  if(visacardValidation.test(Cardnumber) && emailvalidation.test(Email)){
+    const CardNumberEncrypt = bcrypt.hashSync(Cardnumber, 10);
+    await con.query(
+      `INSERT INTO customers (Name,Email,Card,Phonenumber)
+       VALUES ('${Name}', '${Email}','${CardNumberEncrypt}','${PhoneNumber}')`
+    );
+  
+    res.status(200).json({ message: "Customer Created" });
+  }else{
+    res.status(200).json({message:"invalid card or email"})
+  }
+  }
 
-  res.status(200).json({ message: "Customer Created" });
-};
 
 module.exports.updateCustomer = async (req, res) => {
   const { Name, Email, Cardnumber, phone } = req.body;

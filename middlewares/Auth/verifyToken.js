@@ -11,7 +11,7 @@ const Authorize = async (req, res, next) => {
         res.status(401);
         return res.json({ err: "User is not authorized" });
       }
-      console.log(decoded);
+     
       next();
     });
   } else {

@@ -49,22 +49,26 @@ module.exports.updateProduct = async (req, res) => {
     category,
     updated_at,
   } = req.body;
-  const Sqlquery = `UPDATE products SET product_name = '${product_name}' ,product_price = '${product_price}',
-  product_stock = '${product_stock}',
-  product_active = '${product_active}',
-  category_id = '${category}' WHERE id = ${req.params.id}
-  `;
-  await con.query(Sqlquery, (err, result) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(result);
-    }
-  });
   await con.query(
-    `SELECT * FROM products LEFT JOIN categories ON products.category_id = categories.category_id WHERE id = ${req.params.id}`,
-    (err, result) => {
-      res.status(200).json(result);
+    `SELECT COUNT(id) as count from products WHERE id = ${req.params.id}`,
+    (err, response) => {
+      if (response[0].count > 0) {
+        const Sqlquery = `UPDATE products SET product_name = '${product_name}' ,product_price = '${product_price}',
+      product_stock = '${product_stock}',
+      product_active = '${product_active}',
+      category_id = '${category}' WHERE id = ${req.params.id}
+      `;
+        con.query(Sqlquery, (err, result) => {});
+        con.query(
+          `SELECT * FROM products LEFT JOIN categories ON products.category_id = categories.category_id WHERE id = ${req.params.id}`,
+          (err, result) => {
+            res.status(200).json(result);
+          }
+        );
+      } else {
+        console.log("err data")
+        res.status(404).json({ message: "invalid id" });
+      }
     }
   );
 };
